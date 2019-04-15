@@ -34,14 +34,12 @@ def mvfuzzy3(D: np.array, K, m, T, err):
     W_weights = np.ones(shape=[K, p_views], dtype=float)
 
     # compute initial membership degree vector
-    t = TicToc()
-    t.tic()
     U_membDegree = calc_membership_degree(D, G_medoids, W_weights, K, m)
-    t.toc("Membership calculation: ")
+
     return (G_medoids, U_membDegree)
 
 
-def calc_membership_degree(D, G_medoids, W_weights, K, m):
+def calc_membership_degree_loop(D, G_medoids, W_weights, K, m):
     n_elems = D.shape[0]
     p_views = D.shape[2]
 
@@ -50,14 +48,41 @@ def calc_membership_degree(D, G_medoids, W_weights, K, m):
     for i in range(0, n_elems):
         for k in range(0, K):
             u_ik = 0
+            # calc A_ik
+            A_ik = 0
+            for j in range(0, p_views):
+                A_ik += W_weights[k, j] * D[i, G_medoids[k, j], j]
+            # calc B_ik
             for h in range(0, K):
-                A_ik = 0
                 B_ih = 0
                 for j in range(0, p_views):
-                    A_ik += W_weights[k, j] * D[i, G_medoids[k, j], j]
                     B_ih += W_weights[h, j] * D[i, G_medoids[h, j], j]
                 u_ik += (A_ik/B_ih)**(1/(m-1))
+            # calc final U_ik
             U_membDegree[i, k] = 1/u_ik
+    return U_membDegree
+
+
+def calc_membership_degree(D, G_medoids, W_weights, K, m):
+    n_elems = D.shape[0]
+    p_views = D.shape[2]
+
+    # initialize membership degree vector and subparts
+    U_membDegree = np.zeros(shape=[n_elems, K], dtype=float)
+    for k in range(0, K):
+        # compute A column for current k (outter k)
+        A_k = np.zeros((n_elems))
+        for j in range(0, p_views):
+            A_k += W_weights[k, j] * D[:, G_medoids[k, j], j]
+        # compute B for each h (inner k) + already calculate U
+        for h in range(0, K):
+            B_h = np.zeros((n_elems))
+            for j in range(0, p_views):
+                B_h += W_weights[h, j] * D[:, G_medoids[h, j], j]
+            # accumulate U for each h (inner k)
+            U_membDegree[:, k] += (A_k/B_h)**(1/(m-1))
+    # final operation (after inner k sum) on each element of U
+    U_membDegree = 1/U_membDegree
     return U_membDegree
 
 
@@ -76,18 +101,10 @@ def main():
     norm_kar = scaler.fit_transform(mfeat_kar)
 
     # compute dissimilarity matrices
-    t = TicToc()
-    t.tic()
-    D_fac = euclidean_distances(norm_fac)
-    D_fou = euclidean_distances(norm_fou)
-    D_kar = euclidean_distances(norm_kar)
-    t.toc("Dissimilarity calculation:")
+    D = np.zeros((2000, 2000, 3))
+    D[:,:,0] = euclidean_distances(norm_fac)
+    D[:,:,1] = euclidean_distances(norm_fou)
+    D[:,:,2] = euclidean_distances(norm_kar)
 
-    D_all = np.zeros((2000, 2000, 3))
-    D_all[:,:,0] = D_fac
-    D_all[:,:,1] = D_fou
-    D_all[:,:,2] = D_kar
-    
-    mvfuzzy3(D_all, 10, 1.6, 150, 10**-10)
-    # return mvfuzzy3(D_all, 10, 1.6, 150, 10**-10)
+    return mvfuzzy3(D, 10, 1.6, 150, 10**-10)
 
