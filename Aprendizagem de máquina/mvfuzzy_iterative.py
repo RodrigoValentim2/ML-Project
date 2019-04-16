@@ -27,3 +27,17 @@ def calc_membership_degree(D, G_medoids, W_weights, K, m):
             # calc final U_ik
             U_membDegree[i, k] = 1/u_ik
     return U_membDegree
+
+
+def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
+    n_elems = D.shape[0]
+    p_views = D.shape[2]
+
+    J_adequacy = 0
+    for k in range(0, K):
+        for i in range(0, n_elems):
+            dw_k = 0
+            for j in range(0, p_views):
+                dw_k += W_weights[k, j] * D[i, G_medoids[k, j], j]
+            J_adequacy += (U_membDegree[i, k] ** m) * dw_k
+    return J_adequacy

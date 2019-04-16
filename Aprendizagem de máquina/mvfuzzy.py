@@ -6,7 +6,6 @@ from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils import random
 
-
 # -------------------------------------------------------------------------------
 # multi-view fuzzy c-medoid
 # RETURNS:
@@ -36,7 +35,10 @@ def mvfuzzy3(D: np.array, K, m, T, err):
     # compute initial membership degree vector
     U_membDegree = calc_membership_degree(D, G_medoids, W_weights, K, m)
 
-    return (G_medoids, U_membDegree)
+    # compute initial adequacy vector
+    J_adequacy = calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m)
+
+    return (G_medoids, U_membDegree, J_adequacy)
 
 
 def calc_membership_degree(D, G_medoids, W_weights, K, m):
@@ -60,6 +62,18 @@ def calc_membership_degree(D, G_medoids, W_weights, K, m):
     # final operation (after inner k sum) on each element of U
     U_membDegree = 1/U_membDegree
     return U_membDegree
+
+
+def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
+    n_elems = D.shape[0]
+    p_views = D.shape[2]
+
+    Jk_mat = np.zeros((n_elems, K))
+    for k in range(0, K):
+        for j in range(0, p_views):
+            Jk_mat[:, k] += W_weights[k, j] * D[:, G_medoids[k, j], j]
+        Jk_mat[:, k] = (U_membDegree[:, k] ** m) * Jk_mat[:, k]
+    return Jk_mat.sum()
 
 
 # -------------------------------------------------------------------------------
