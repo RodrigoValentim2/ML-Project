@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import sys
 from pytictoc import TicToc
 from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
@@ -13,7 +12,7 @@ from sklearn.utils import random
 #    G - medoid vectors
 #    W - relevance weight vectors
 #    U - membership degree vectors
-def mvfuzzy3(D: np.array, K, m, T, err):
+def mvfuzzy(D: np.array, K, m, T, err):
     t_iteration = 0
     n_elems = D.shape[0]
     p_views = D.shape[2]
@@ -35,7 +34,7 @@ def mvfuzzy3(D: np.array, K, m, T, err):
     # compute initial membership degree vector
     U_membDegree = calc_membership_degree(D, G_medoids, W_weights, K, m)
 
-    # compute initial adequacy vector
+    # compute initial adequacy
     J_adequacy = calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m)
 
     return (G_medoids, U_membDegree, J_adequacy)
@@ -74,27 +73,3 @@ def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
             Jk_mat[:, k] += W_weights[k, j] * D[:, G_medoids[k, j], j]
         Jk_mat[:, k] = (U_membDegree[:, k] ** m) * Jk_mat[:, k]
     return Jk_mat.sum()
-
-
-# -------------------------------------------------------------------------------
-# MAIN - for testing
-def main():
-    # read the data
-    mfeat_fac = pd.read_csv("mfeat/mfeat-fac", sep="\\s+", header=None, dtype=float)
-    mfeat_fou = pd.read_csv("mfeat/mfeat-fou", sep="\\s+", header=None, dtype=float)
-    mfeat_kar = pd.read_csv("mfeat/mfeat-kar", sep="\\s+", header=None, dtype=float)
-
-    # normalize
-    scaler = preprocessing.MinMaxScaler()
-    norm_fac = scaler.fit_transform(mfeat_fac)
-    norm_fou = scaler.fit_transform(mfeat_fou)
-    norm_kar = scaler.fit_transform(mfeat_kar)
-
-    # compute dissimilarity matrices
-    D = np.zeros((2000, 2000, 3))
-    D[:,:,0] = euclidean_distances(norm_fac)
-    D[:,:,1] = euclidean_distances(norm_fou)
-    D[:,:,2] = euclidean_distances(norm_kar)
-
-    return mvfuzzy3(D, 10, 1.6, 150, 10**-10)
-

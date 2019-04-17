@@ -10,7 +10,7 @@ def calc_membership_degree(D, G_medoids, W_weights, K, m):
     p_views = D.shape[2]
 
     # initialize membership degree vector
-    U_membDegree = np.zeros(shape=[n_elems, K], dtype=float)
+    U_membDegree = np.zeros(shape=[n_elems, K])
     for i in range(0, n_elems):
         for k in range(0, K):
             u_ik = 0
