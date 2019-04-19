@@ -10,13 +10,19 @@ from sklearn import preprocessing
 from sklearn.utils import random
 from sklearn.metrics.pairwise import euclidean_distances
 
-def test_mvfuzzy(D: np.array, K, m, T, err):
+
+# CONSTANTS
+RANDOM_SEED = 128476
+
+
+# Main test function, will go through each calculation function
+def test_all(D: np.array, K, m, T, err):
     n_elems = D.shape[0]
     p_views = D.shape[2]
     t = TicToc()
 
     # Initial medoids selection
-    rand_elements = random.sample_without_replacement(n_elems, K * p_views)
+    rand_elements = random.sample_without_replacement(n_elems, K * p_views, random_state=RANDOM_SEED)
     G_medoids = np.zeros(shape=[K, p_views], dtype=int)
     for k in range(0, K):
         for p in range(0, p_views):
@@ -28,46 +34,74 @@ def test_mvfuzzy(D: np.array, K, m, T, err):
     # ---------------------------------------------------------------------------
     # Membership degree vector calculation
     # iterative
+    print("---------------------------------------------")
+    print("Membership vector (U | Eq. 6)")
     t.tic()
     U_membDegree_iterative = mvf_iterative.calc_membership_degree(
         D, G_medoids, W_weights, K, m)
     elapsed = t.tocvalue()
-    print_formatted("Membership vector (iterative): ", elapsed)
+    print_formatted("Iterative: ", elapsed)
 
     # matrix (optimized)
     t.tic()
     U_membDegree_matrix = mvf.calc_membership_degree(
         D, G_medoids, W_weights, K, m)
     elapsed = t.tocvalue()
-    print_formatted("Membership vector (matrix): ", elapsed)
+    print_formatted("Matrix: ", elapsed)
 
     # check if matrices are identical
     areEqual_U = U_membDegree_iterative == U_membDegree_matrix
     areEqual_U = areEqual_U.any()
-    print_formatted("Membership iterative == matrix:", areEqual_U)
+    print_formatted("Iterative == Matrix:", areEqual_U)
 
     # ---------------------------------------------------------------------------
     # Adequacy calculation
+    #
     # iterative
+    print("---------------------------------------------")
+    print("Adequacy (J | Eq. 1)")
     t.tic()
     J_adequacy_iterative = mvf_iterative.calc_adequacy(
         D, G_medoids, W_weights, U_membDegree_iterative, K, m)
     elapsed = t.tocvalue()
-    print_formatted("Adequacy (iterative): ", elapsed)
+    print_formatted("Iterative: ", elapsed)
 
     # matrix (optimized)
     t.tic()
     J_adequacy_matrix = mvf.calc_adequacy(
         D, G_medoids, W_weights, U_membDegree_matrix, K, m)
     elapsed = t.tocvalue()
-    print_formatted("Adequacy (matrix): ", elapsed)
+    print_formatted("Matrix: ", elapsed)
 
     # check if results are identical
     # must use math.isclose() to compare floats to deal with aproximation errors
     areEqual_J = math.isclose(J_adequacy_iterative, J_adequacy_matrix)
-    print_formatted("Adequacy iterative == matrix:", areEqual_J)
+    print_formatted("Iterative == Matrix:", areEqual_J)
+
+    # ---------------------------------------------------------------------------
+    # Best medoid vector calculation
+    #
+    # iterative
+    print("---------------------------------------------")
+    print("Best Medoids Vector (G | Eq. 4)")
+    t.tic()
+    G_bestMedoids_iterative = mvf_iterative.calc_best_medoids(D, U_membDegree_matrix, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Iterative:", elapsed)
+
+    # matrix (optimized)
+    t.tic()
+    G_bestMedoids_matrix = mvf.calc_best_medoids(D, U_membDegree_matrix, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Matrix:", elapsed)
+
+    # check if results are identical
+    areEqual_G = G_bestMedoids_iterative == G_bestMedoids_matrix
+    areEqual_G = areEqual_G.any()
+    print_formatted("Iterative == Matrix:", areEqual_G)
 
 
+# should be improved, maybe generalized and always require the suffix
 def print_formatted(name: str, value, suffix=True):
     if(type(value) is float):
         if(suffix):
@@ -77,7 +111,7 @@ def print_formatted(name: str, value, suffix=True):
         value_str = "{:.8f}{}".format(value, suffix)
     else:
         value_str = str(value)
-    print("{:35}{}".format(name, value_str))
+    print("{:25}{}".format(name, value_str))
 
 
 # -------------------------------------------------------------------------------
@@ -103,7 +137,7 @@ def main():
     D[:, :, 1] = euclidean_distances(norm_fou)
     D[:, :, 2] = euclidean_distances(norm_kar)
 
-    return test_mvfuzzy(D, 10, 1.6, 150, 10**-10)
+    test_all(D, 10, 1.6, 150, 10**-10)
 
 
 if __name__ == '__main__':

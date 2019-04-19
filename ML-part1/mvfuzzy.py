@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 from pytictoc import TicToc
 from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
@@ -37,7 +38,44 @@ def mvfuzzy(D: np.array, K, m, T, err):
     # compute initial adequacy
     J_adequacy = calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m)
 
+    U_previous = U_membDegree
+    J_previous = J_adequacy
+    for t_iteration in range(1, 150):
+        # find best medoid vectors
+        G_t = calc_best_medoids(D, U_previous, K, m)
+
+        # find new best relevance weights
+        W_t = calc_best_weights(D, U_previous, G_t, K, m)
+
+        # find new membership degree vector (best fuzzy partition)
+        U_t = calc_membership_degree(D, G_t, W_t, K, m)
+
+        # find new adequacy and determine if meets criteria
+        J_t = calc_adequacy(D, G_t, W_t, U_t, K, m)
+        J_adequacy_difference = abs(J_previous - J_t)
+        if J_adequacy_difference < m:
+            break
+    return (G_t, W_t, U_t)
+
+
     return (G_medoids, U_membDegree, J_adequacy)
+
+
+def calc_best_medoids(D, U_membDegree, K, m):
+    p_views = D.shape[2]
+
+    G_best_medoids = np.zeros((K, p_views))
+    for k in range(0, K):
+        for j in range(0, p_views):
+            # multiply column U_k to every column of D_j
+            # Akj_matrix: shape = (n_elems, n_elems)
+            Akj_matrix = (U_membDegree[:, k] ** m)* D[:, :, j]
+            #
+            # sum column-wise (second dimension => axis=1)
+            # A_kj: shape = (n_elems)
+            A_kj = np.sum(Akj_matrix, axis=1)
+            G_best_medoids[k, j] = np.argmin(A_kj)
+    return G_best_medoids
 
 
 def calc_membership_degree(D, G_medoids, W_weights, K, m):

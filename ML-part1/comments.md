@@ -14,7 +14,9 @@ Dissimilarity calculation: 0.399334 seconds.
         Matrix adequacy: 0.004558 seconds.
         Iterative adequacy: 0.167843 seconds.
     * Results
-        99.99999999999999% Identical
-        Aproximation difference (1 decimal less)
-        3839.562133143148   <---
-        3839.5621331431357  <---
+        Identical (100%)
+
+### Best Medoids calculation (G_best)
+    * Time
+        Matrix best medoids: 
+        Iterative best medoids: 138.76918281 seconds

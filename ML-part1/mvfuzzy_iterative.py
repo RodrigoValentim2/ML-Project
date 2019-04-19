@@ -41,3 +41,22 @@ def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
                 dw_k += W_weights[k, j] * D[i, G_medoids[k, j], j]
             J_adequacy += (U_membDegree[i, k] ** m) * dw_k
     return J_adequacy
+
+
+def calc_best_medoids(D, U_membDegree, K, m):
+    n_elems = D.shape[0]
+    p_views = D.shape[2]
+
+    G_best_medoids = np.zeros((K, p_views))
+    for k in range(0, K):
+        for j in range(0, p_views):
+            sum_previous = float("inf")
+            for h in range(0, n_elems):
+                sum_h = 0
+                for i in range(0, n_elems):
+                    sum_h += (U_membDegree[i, k] ** m) * D[i, h, j]
+                if sum_h < sum_previous:
+                    l_kj = h
+                    sum_previous = sum_h
+            G_best_medoids[k, j] = l_kj
+    return G_best_medoids
