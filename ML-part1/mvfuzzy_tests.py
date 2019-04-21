@@ -35,7 +35,7 @@ def test_all(D: np.array, K, m, T, err):
     # Membership degree vector calculation
     # iterative
     print("---------------------------------------------")
-    print("Membership vector (U | Eq. 6)")
+    print("Membership Vector (U | Eq. 6)")
     t.tic()
     U_membDegree_iterative = mvf_iterative.calc_membership_degree(
         D, G_medoids, W_weights, K, m)
@@ -50,8 +50,8 @@ def test_all(D: np.array, K, m, T, err):
     print_formatted("Matrix: ", elapsed)
 
     # check if matrices are identical
-    areEqual_U = U_membDegree_iterative == U_membDegree_matrix
-    areEqual_U = areEqual_U.any()
+    areEqual_U = np.isclose(U_membDegree_iterative, U_membDegree_matrix)
+    areEqual_U = areEqual_U.all()
     print_formatted("Iterative == Matrix:", areEqual_U)
 
     # ---------------------------------------------------------------------------
@@ -97,8 +97,32 @@ def test_all(D: np.array, K, m, T, err):
 
     # check if results are identical
     areEqual_G = G_bestMedoids_iterative == G_bestMedoids_matrix
-    areEqual_G = areEqual_G.any()
+    areEqual_G = areEqual_G.all()
     print_formatted("Iterative == Matrix:", areEqual_G)
+
+    # ---------------------------------------------------------------------------
+    # Best weights vector calculation
+    #
+    # iterative
+    print("---------------------------------------------")
+    print("Best Weights Vector (W | Eq. 5)")
+    t.tic()
+    W_bestWeights_iterative = mvf_iterative.calc_best_weights(D, U_membDegree_matrix, G_bestMedoids_matrix, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Iterative:", elapsed)
+
+    # matrix (optimized)
+    t.tic()
+    W_bestWeights_matrix = mvf.calc_best_weights(D, U_membDegree_matrix, G_bestMedoids_matrix, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Matrix:", elapsed)
+
+    # check if results are identical
+    areEqual_W = np.isclose(W_bestWeights_iterative, W_bestWeights_matrix)
+    areEqual_W = areEqual_W.all()
+    print_formatted("Iterative == Matrix:", areEqual_W)
+    np.savetxt("W_iterative", W_bestWeights_iterative)
+    np.savetxt("W_matrix", W_bestWeights_matrix)
 
 
 # should be improved, maybe generalized and always require the suffix

@@ -2,21 +2,22 @@
 Dissimilarity calculation: 0.399334 seconds.
 
 ## Iterative x Matrix
-### Membership calculation (G)
-    * Time
-        Membership calculation:  1.042433 seconds.
-        Membership calc (fast):  0.039684 seconds.
-    * Results
-        Identical (100%)
+### Membership Vector (U | Eq. 6)
+    * Iterative:               0.93486107 seconds
+    * Matrix:                  0.03412782 seconds
+    * Iterative == Matrix:     True
 
-### Adequacy calculation (J)
-    * Time
-        Matrix adequacy: 0.004558 seconds.
-        Iterative adequacy: 0.167843 seconds.
-    * Results
-        Identical (100%)
+### Adequacy (J | Eq. 1)
+    * Iterative:               0.09606516 seconds
+    * Matrix:                  0.00376174 seconds
+    * Iterative == Matrix:     True
 
-### Best Medoids calculation (G_best)
-    * Time
-        Matrix best medoids: 
-        Iterative best medoids: 138.76918281 seconds
+### Best Medoids Vector (G | Eq. 4)
+    * Iterative:               129.65748083 seconds
+    * Matrix:                  0.56323955 seconds
+    * Iterative == Matrix:     True
+
+### Best Weights Vector (W | Eq. 5)
+    * Iterative:               0.44563900 seconds
+    * Matrix:                  0.03736557 seconds
+    * Iterative == Matrix:     True

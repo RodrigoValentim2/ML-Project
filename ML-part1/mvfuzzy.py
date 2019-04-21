@@ -56,15 +56,14 @@ def mvfuzzy(D: np.array, K, m, T, err):
         if J_adequacy_difference < m:
             break
     return (G_t, W_t, U_t)
-
-
     return (G_medoids, U_membDegree, J_adequacy)
 
 
 def calc_best_medoids(D, U_membDegree, K, m):
     p_views = D.shape[2]
 
-    G_best_medoids = np.zeros((K, p_views))
+    # must specify as int because numpy default is float
+    G_best_medoids = np.zeros((K, p_views), dtype=int)
     for k in range(0, K):
         for j in range(0, p_views):
             # multiply column U_k to every column of D_j
@@ -111,3 +110,24 @@ def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
             Jk_mat[:, k] += W_weights[k, j] * D[:, G_medoids[k, j], j]
         Jk_mat[:, k] = (U_membDegree[:, k] ** m) * Jk_mat[:, k]
     return Jk_mat.sum()
+
+
+def calc_best_weights(D, U_previous, G_medoids, K, m):
+    p_views = D.shape[2]
+
+    W_weights = np.ones(shape=[K, p_views])
+    for k in range(0, K):
+        for j in range(0, p_views):
+            # A: upper member of Eq. 5
+            A_kj = 1
+            for h in range(0, p_views):
+                # C: summatory in upper member of Eq. 5
+                Ckj_h = (U_previous[:, k] ** m) * D[:, G_medoids[k, h], h]
+                A_kj = A_kj * np.sum(Ckj_h, axis=0)
+            A_kj = A_kj ** (1/p_views)
+            # B: bottom member of Eq. 5
+            Bkj_column = (U_previous[:, k] ** m) * D[:, G_medoids[k, j], j]
+            B_kj = np.sum(Bkj_column, axis=0)
+            W_weights[k, j] = A_kj / B_kj
+    return W_weights
+    

@@ -47,7 +47,8 @@ def calc_best_medoids(D, U_membDegree, K, m):
     n_elems = D.shape[0]
     p_views = D.shape[2]
 
-    G_best_medoids = np.zeros((K, p_views))
+    # must specify as int because numpy default is float
+    G_best_medoids = np.zeros((K, p_views), dtype=int)
     for k in range(0, K):
         for j in range(0, p_views):
             sum_previous = float("inf")
@@ -60,3 +61,27 @@ def calc_best_medoids(D, U_membDegree, K, m):
                     sum_previous = sum_h
             G_best_medoids[k, j] = l_kj
     return G_best_medoids
+
+
+def calc_best_weights(D, U_previous, G_medoids, K, m):
+    n_elems = D.shape[0]
+    p_views = D.shape[2]
+
+    W_weights = np.ones(shape=[K, p_views])
+    for k in range(0, K):
+        for j in range(0, p_views):
+            # A: upper member of Eq. 5
+            A_kj = 1
+            for h in range(0, p_views):
+                # summatory in upper member of Eq. 5
+                sum_h = 0
+                for i in range(0, n_elems):
+                    sum_h += (U_previous[i, k] ** m) * D[i, G_medoids[k, h], h]
+                A_kj *= sum_h
+            A_kj = A_kj ** (1/p_views)
+            # B: bottom member of Eq. 5
+            B_kj = 0
+            for i in range(0, n_elems):
+                B_kj += (U_previous[i, k] ** m) * D[i, G_medoids[k, j], j]
+            W_weights[k, j] = A_kj / B_kj
+    return W_weights
