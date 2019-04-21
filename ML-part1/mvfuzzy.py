@@ -13,8 +13,7 @@ from sklearn.utils import random
 #    G - medoid vectors
 #    W - relevance weight vectors
 #    U - membership degree vectors
-def mvfuzzy(D: np.array, K, m, T, err):
-    t_iteration = 0
+def calc_fuzzy_partition(D: np.array, K, m, T, err):
     n_elems = D.shape[0]
     p_views = D.shape[2]
     
@@ -40,7 +39,11 @@ def mvfuzzy(D: np.array, K, m, T, err):
 
     U_previous = U_membDegree
     J_previous = J_adequacy
-    for t_iteration in range(1, 150):
+    last_iteration = 0
+    J_t = 0
+    J_adequacy_difference = 0
+    for t in range(1, T+1):
+        last_iteration = t
         # find best medoid vectors
         G_t = calc_best_medoids(D, U_previous, K, m)
 
@@ -53,13 +56,16 @@ def mvfuzzy(D: np.array, K, m, T, err):
         # find new adequacy and determine if meets criteria
         J_t = calc_adequacy(D, G_t, W_t, U_t, K, m)
         J_adequacy_difference = abs(J_previous - J_t)
-        if J_adequacy_difference < m:
+        if J_adequacy_difference < err:
             break
-    return (G_t, W_t, U_t)
-    return (G_medoids, U_membDegree, J_adequacy)
+        else:
+            U_previous = U_t
+            J_previous = J_t
+    return (last_iteration, J_t, J_adequacy_difference, G_t, W_t, U_t)
 
 
 def calc_best_medoids(D, U_membDegree, K, m):
+    """Calculate the best medoids vector according to Eq. 4"""
     p_views = D.shape[2]
 
     # must specify as int because numpy default is float
@@ -78,6 +84,7 @@ def calc_best_medoids(D, U_membDegree, K, m):
 
 
 def calc_membership_degree(D, G_medoids, W_weights, K, m):
+    """Calculate the best membership degree vectors according to Eq. 6"""
     n_elems = D.shape[0]
     p_views = D.shape[2]
 
@@ -101,6 +108,7 @@ def calc_membership_degree(D, G_medoids, W_weights, K, m):
 
 
 def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
+    """Calculate the adequacy vectors according to Eq. 1"""
     n_elems = D.shape[0]
     p_views = D.shape[2]
 
@@ -113,6 +121,7 @@ def calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m):
 
 
 def calc_best_weights(D, U_previous, G_medoids, K, m):
+    """Calculate the best weights vectors according to Eq. 5"""
     p_views = D.shape[2]
 
     W_weights = np.ones(shape=[K, p_views])

@@ -15,8 +15,11 @@ from sklearn.metrics.pairwise import euclidean_distances
 RANDOM_SEED = 128476
 
 
-# Main test function, will go through each calculation function
-def test_all(D: np.array, K, m, T, err):
+def test_matrix_iterative(D: np.array, K, m, T, err):
+    """
+    Compares the performance of the iterative vs matrix implementations of the
+    several equations to compute the fuzzy partition.
+    """
     n_elems = D.shape[0]
     p_views = D.shape[2]
     t = TicToc()
@@ -138,6 +141,28 @@ def print_formatted(name: str, value, suffix=True):
     print("{:25}{}".format(name, value_str))
 
 
+def test_fuzzy_partition(D: np.array, K, m, T, err):
+    """
+    Calculate the fuzzy partition for a given input, measures the time and
+    saves the results
+    """
+    t = TicToc()
+    print("---------------------------------------------")
+    print("Calculating fuzzy partition...", end="", flush=True)
+    t.tic()
+    result = mvf.calc_fuzzy_partition(D, K, m, T, err)
+    elapsed = t.tocvalue()
+    (last_iteration, J_last, J_diff, G_medoids, W_weights, U_memb) = result
+    print("done!")
+    print_formatted("Last Iteration:", last_iteration, suffix=False)
+    print_formatted("Last J_t:", J_last, suffix=False)
+    print_formatted("Last J_diff:", J_diff, suffix=False)
+    print_formatted("Elapsed time:", elapsed)
+    np.save("G_medoids", G_medoids)
+    np.save("W_weights", W_weights)
+    np.save("U_membership", U_memb)
+
+
 # -------------------------------------------------------------------------------
 # MAIN - for testing
 def main():
@@ -161,7 +186,9 @@ def main():
     D[:, :, 1] = euclidean_distances(norm_fou)
     D[:, :, 2] = euclidean_distances(norm_kar)
 
-    test_all(D, 10, 1.6, 150, 10**-10)
+    for i in range(0, 15):
+        # test_matrix_iterative(D, 10, 1.6, 150, 10**-10)
+        test_fuzzy_partition(D, 10, 1.6, 150, 10**-10)
 
 
 if __name__ == '__main__':
