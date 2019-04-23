@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import math
 from pytictoc import TicToc
 from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
