@@ -2,7 +2,7 @@
 
 import pandas as pd
 import numpy as np
-import mvfuzzy as mvf
+from mvfuzzy import MVFuzzy
 import mvfuzzy_iterative as mvf_iterative
 import math
 from pytictoc import TicToc
@@ -23,6 +23,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
     n_elems = D.shape[0]
     p_views = D.shape[2]
     t = TicToc()
+    mvf = MVFuzzy()
 
     # Initial medoids selection
     rand_elements = random.sample_without_replacement(n_elems, K * p_views, random_state=RANDOM_SEED)
@@ -47,7 +48,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
 
     # matrix (optimized)
     t.tic()
-    U_membDegree_matrix = mvf.calc_membership_degree(
+    U_membDegree_matrix = mvf._calc_membership_degree(
         D, G_medoids, W_weights, K, m)
     elapsed = t.tocvalue()
     print_formatted("Matrix: ", elapsed)
@@ -71,7 +72,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
 
     # matrix (optimized)
     t.tic()
-    J_adequacy_matrix = mvf.calc_adequacy(
+    J_adequacy_matrix = mvf._calc_adequacy(
         D, G_medoids, W_weights, U_membDegree_matrix, K, m)
     elapsed = t.tocvalue()
     print_formatted("Matrix: ", elapsed)
@@ -94,7 +95,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
 
     # matrix (optimized)
     t.tic()
-    G_bestMedoids_matrix = mvf.calc_best_medoids(D, U_membDegree_matrix, K, m)
+    G_bestMedoids_matrix = mvf._calc_best_medoids(D, U_membDegree_matrix, K, m)
     elapsed = t.tocvalue()
     print_formatted("Matrix:", elapsed)
 
@@ -116,7 +117,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
 
     # matrix (optimized)
     t.tic()
-    W_bestWeights_matrix = mvf.calc_best_weights(D, U_membDegree_matrix, G_bestMedoids_matrix, K, m)
+    W_bestWeights_matrix = mvf._calc_best_weights(D, U_membDegree_matrix, G_bestMedoids_matrix, K, m)
     elapsed = t.tocvalue()
     print_formatted("Matrix:", elapsed)
 
@@ -147,20 +148,19 @@ def test_fuzzy_partition(D: np.array, K, m, T, err):
     saves the results
     """
     t = TicToc()
+    mvf = MVFuzzy()
     print("---------------------------------------------")
     print("Calculating fuzzy partition...", end="", flush=True)
     t.tic()
-    result = mvf.calc_fuzzy_partition(D, K, m, T, err)
+    mvf.run(D, K, m, T, err)
     elapsed = t.tocvalue()
-    (last_iteration, J_last, J_diff, G_medoids, W_weights, U_memb) = result
     print("done!")
-    print_formatted("Last Iteration:", last_iteration, suffix=False)
-    print_formatted("Last J_t:", J_last, suffix=False)
-    print_formatted("Last J_diff:", J_diff, suffix=False)
+    print_formatted("Last Iteration:", mvf.lastIteration, suffix=False)
+    print_formatted("Last J_t:", mvf.lastAdequacy, suffix=False)
     print_formatted("Elapsed time:", elapsed)
-    np.save("G_medoids", G_medoids)
-    np.save("W_weights", W_weights)
-    np.save("U_membership", U_memb)
+    np.save("G_medoids", mvf.bestMedoidVectors)
+    np.save("W_weights", mvf.bestWeightVectors)
+    np.save("U_membership", mvf.bestMembershipVectors)
 
 
 # -------------------------------------------------------------------------------
