@@ -12,7 +12,7 @@
 # ```
 
 #%% Setup
-import mvfuzzy
+from mvfuzzy import MVFuzzy
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
@@ -52,9 +52,27 @@ D[:, :, 2] = euclidean_distances(norm_kar)
 # 1. Fixa seed inicial para prover repetibilidade
 # 2. Executa 100 vezes
 # 3. Guarda resultado para aquele com menor J (função objetivo)
+#
+# > ainda é possível que resultado varie caso, durante a execução, o numpy seja chamado em outro código (execução em paralelo), pelo que entendi do FAQ. Porém isso nunca ocorrerá em nosso cenário, logo a reprodutibilidade é garantida em nosso cenário.
 
 #%% Executa algoritmo MVFCMddV
 np.random.seed(RANDOM_SEED)
-mvfuzzy.calc_fuzzy_partition(D, PARAM_K, PARAM_m, PARAM_T, PARAM_e)
+J_previous = float("Inf")
+best_result = ()
+mvf = MVFuzzy()
+for i in range(0, 100):
+    mvf.run(D, PARAM_K, PARAM_m, PARAM_T, PARAM_e)
+    if mvf.lastAdequacy < J_previous:
+        J_previous = mvf.lastAdequacy
+        best_result = mvf.getLastState()
+
+#%% [markdown]
+# ## 4. Gerar partição Crisp
+
+
+#%% [markdown]
+# ### 3.1 Melhor Partição: Vetor de Medoids ($G$)
 
 #%%
+print(best_result[3])
+

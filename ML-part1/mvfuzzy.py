@@ -29,13 +29,13 @@ class MVFuzzy:
     ------
     The final fuzzy partition with it's weights and medoid vectors will be
     stored in the class members:
-        ----
+
         bestMedoidVectors: numpy.array
             Matrix G: medoid vectors of the last iteration, dimensions (K, p)
-        ----
+
         bestWeightVectors: numpy.array
             Matrix W: the weight vectors of the last iteration, dimensions (K, p)
-        ----
+
         bestMembershipVectors: numpy.array
             Matrix U: the membership vectors of the last iteration, dimensions (n, K)
     
@@ -43,9 +43,10 @@ class MVFuzzy:
     -----------------------------
     The final state of the iterations is also saved and may be accessed by the
     respective members:
+
         lastIteration: int
             the number of interations until reach convergence
-        ----
+
         lastAdequacy: float
             the value of the last adequacy when reached convergence
 
@@ -115,6 +116,16 @@ class MVFuzzy:
         self.bestMedoidVectors = G_t
         self.bestWeightVectors = W_t
         self.bestMembershipVectors = U_t
+
+
+    def getLastState(self):
+        return {
+            "lastAdequacy": self.lastAdequacy,
+            "bestMedoidVectors": self.bestMedoidVectors,
+            "bestWeightVectors": self.bestWeightVectors,
+            "bestMembershipVectors": self.bestMembershipVectors,
+            "lastIteration": self.lastIteration
+        }
 
 
     def _calc_best_medoids(self, D, U_membDegree, K, m):
