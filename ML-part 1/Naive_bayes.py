@@ -36,7 +36,7 @@ class NaiveBayes:
         apriori = parameter[0]
         sigma = parameter[1]
         mean = parameter[2]
-        classes = 10
+        classes =  len(parameter[3])
         x = x
         densities = []
 
@@ -95,10 +95,10 @@ class NaiveBayes:
         self.posteriori_view3 = self.posteriori(self.densities_view3)
         
         #Sum rule
-        posteriori_final = ( self.posteriori_view1+ self.posteriori_view2+ self.posteriori_view3)
+        posteriori_final = (self.posteriori_view1+ self.posteriori_view2+ self.posteriori_view3)
         
         #y predict
-        y_pred_view1 = [np.argmax(x) for x in self.posteriori_view1]
+        #y_pred_view1 = [np.argmax(x) for x in self.posteriori_view1]
         #y_pred_view2 = [np.argmax(x) for x in self.posteriori_view2]
         #y_pred_view3 = [np.argmax(x) for x in self.posteriori_view3]
         
@@ -106,5 +106,5 @@ class NaiveBayes:
         
   
     
-        return y_pred_final, y_pred_view1
+        return y_pred_final
  
