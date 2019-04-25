@@ -57,11 +57,11 @@ class MVFuzzy:
 
 
     def __init__(self):
-        self.bestMedoidVectors = []
-        self.bestWeightVectors = []
-        self.bestMembershipVectors = []
-        self.lastIteration = []
-        self.lastAdequacy = 0
+        self.bestMedoidVectors = np.empty
+        self.bestWeightVectors = np.empty
+        self.bestMembershipVectors = np.empty
+        self.lastIteration = np.empty
+        self.lastAdequacy = 0.0
 
 
     def run(self, D: np.array, K, m, T, err):
@@ -118,14 +118,9 @@ class MVFuzzy:
         self.bestMembershipVectors = U_t
 
 
-    def getLastState(self):
-        return {
-            "lastAdequacy": self.lastAdequacy,
-            "bestMedoidVectors": self.bestMedoidVectors,
-            "bestWeightVectors": self.bestWeightVectors,
-            "bestMembershipVectors": self.bestMembershipVectors,
-            "lastIteration": self.lastIteration
-        }
+    def toCrispPartition(self):
+        """Returns an array with the cluster number where g_ik is maximum for each element"""
+        return 1 + np.argmax(self.bestMembershipVectors, axis=1)
 
 
     def _calc_best_medoids(self, D, U_membDegree, K, m):
