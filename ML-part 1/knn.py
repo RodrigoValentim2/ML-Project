@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from scipy.spatial import distance 
+from numba import jit
+import numpy as np
 
 class KNN:
     def __init__(self):
@@ -16,7 +18,7 @@ class KNN:
         self.y_trains = y_trains
         self.k = k
         
-       
+    @jit(nopython=True)   
     def posteriori(self, X_test):
         
         densities_view1  = []
