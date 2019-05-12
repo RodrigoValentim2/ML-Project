@@ -11,57 +11,58 @@ class KNN:
         self.y_trains = []
         self.evidence = 0
         self.count_labels_y = np.array([])
+        self.priori = []
         
         
     def fit(self, X_trains, y_trains, k):
         self.X_trains = X_trains
         self.y_trains = y_trains
         self.k = k
+        __, counts = np.unique(self.y_trains[0], return_counts=True)
+        self.priori = counts/len(self.y_trains[0])
         
-    @jit(nopython=True)   
+ 
     def posteriori(self, X_test):
         
-        densities_view1  = []
+        posteriori_view1  = []
         for x in (X_test[0]):
             n = self.neighbors(x ,self.X_trains[0] ,self.y_trains[0], self.k)
-            densities_view1.append(self.den_calculation(n, X_test[0]))
+            posteriori_view1.append(self.calc_posteriori(n, X_test[0]))
                                  
-        densities_view2  = []
+        posteriori_view2  = []
         for x in (X_test[1]):
             n = self.neighbors(x ,self.X_trains[1] ,self.y_trains[1], self.k)
-            densities_view2.append(self.den_calculation(n, X_test[1]))
+            posteriori_view2.append(self.calc_posteriori(n, X_test[1]))
          
-        densities_view3  = []
+        posteriori_view3  = []
         for x in (X_test[2]):
             n = self.neighbors(x ,self.X_trains[2] ,self.y_trains[2], self.k)
-            densities_view3.append(self.den_calculation(n, X_test[2]))
+            posteriori_view3.append(self.calc_posteriori(n, X_test[2]))
         
-        evidence = np.array(densities_view1)+np.array(densities_view2)+np.array(densities_view3)
      
-        evidence =  evidence.sum() 
-       
-        posteriori_view1 =  densities_view1 / evidence
-        posteriori_view2 =  densities_view2 /evidence
-        posteriori_view3 =  densities_view3 / evidence
              
-        return posteriori_view1, posteriori_view2, posteriori_view3                 
+        return np.array(posteriori_view1), np.array(posteriori_view2), np.array(posteriori_view3)                 
                                
     def predict(self, X_tests):
         posteriori1, posteriori2, posteriori3 = self.posteriori(X_tests)
-        posteriori_final = posteriori1+posteriori2+posteriori3 
+        
+        
+        priori = self.priori*(1-3)
+        posteriori_final = (posteriori1+posteriori2+posteriori3)*priori
+        
+       
         y = []                         
         for p in posteriori_final:
-            y.append(np.argmax(p))
+            y.append(np.argmin(p))
         return y           
               
                                  
-    def den_calculation(self, n, x):
-        #volume = ((mt.pi)**(x[1]/2))/mt.factorial((x.shape[1]/2))
-        #volume = volume.sum()
+    def calc_posteriori(self, n, x):
+        
         dens = []
         
         for i in  range(0, 10):
-            dens.append(n.count(i)/200)
+            dens.append(n.count(i)/len(self.y_trains[0]))
 
         return dens 
     

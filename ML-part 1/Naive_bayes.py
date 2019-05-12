@@ -95,14 +95,14 @@ class NaiveBayes:
         self.posteriori_view3 = self.posteriori(self.densities_view3)
         
         #Sum rule
-        posteriori_final = (self.posteriori_view1+ self.posteriori_view2+ self.posteriori_view3)
-        
+        priori =  self.parameters_views[0][0] * (1-3)
+        posteriori_final = np.array(self.posteriori_view1+ self.posteriori_view2+ self.posteriori_view3)*priori
         #y predict
         #y_pred_view1 = [np.argmax(x) for x in self.posteriori_view1]
         #y_pred_view2 = [np.argmax(x) for x in self.posteriori_view2]
         #y_pred_view3 = [np.argmax(x) for x in self.posteriori_view3]
         
-        y_pred_final = [np.argmax(x) for x in posteriori_final]
+        y_pred_final = [np.argmin(x) for x in posteriori_final]
         
   
     
