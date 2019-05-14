@@ -89,11 +89,13 @@ for i in range(REPETITIONS):
         Jbest_print = "{:<16.8f}".format(mvf.lastAdequacy)
     else:
         Jbest_print = "{:<16}".format('')
-    has_empty_str = str(mvf.hasEmptyCluster(PARAM_K))
+    if mvf.hasEmptyCluster(PARAM_K):
+        has_empty_str = "True: {}".format(mvf.getEmptyClasses(PARAM_K))
+    else:
+        has_empty_str = ""
     print("{:5}| {:<16.8f} | {Jbest} | {:5}"
           .format(i+1, mvf.lastAdequacy, has_empty_str, Jbest=Jbest_print))
 t.toc("Fuzzy algorithm 100x: ")
-
 # %% [markdown]
 # ## 4. Resultados do Particionamento com MVFCMddV
 

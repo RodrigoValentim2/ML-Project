@@ -76,7 +76,7 @@ class MVFuzzy:
         # compute initial membership degree vector
         U_membDegree = self._calc_membership_degree(D, G_medoids, W_weights, K, m)
 
-        # print('Ite  | Empty Clusters'); print('T: 0 | '); self.bestMembershipVectors = U_membDegree; self.printEmptyClasses(K, True)
+        # print('Ite  | Empty Clusters'); print('T: 0 | '); self.bestMembershipVectors = U_membDegree; self.printEmptyClasses(K)
 
         # compute initial adequacy
         J_adequacy = self._calc_adequacy(D, G_medoids, W_weights, U_membDegree, K, m)
@@ -96,7 +96,7 @@ class MVFuzzy:
             else:
                 U_previous = U_t
                 J_previous = J_t
-            # self.bestMembershipVectors = U_t; print('T:', t, '|', end='', flush=True);  self.printEmptyClasses(K, True); print('', flush=True)
+            # self.bestMembershipVectors = U_t; print('T:', t, '|', end='', flush=True);  self.printEmptyClasses(K); print('', flush=True)
         self.lastAdequacy = J_t
         self.bestMedoidVectors = G_t
         self.bestWeightVectors = W_t
@@ -126,16 +126,22 @@ class MVFuzzy:
         partition_byClass = self.toCrispPartitionByClass(K)
         for k in range(K):
             cur_list = partition_byClass[k]
-            print("Cluster {} ({} elements):\n{}".format(k+1, len(cur_list), cur_list))
+            print("Cluster {} ({} elements):\n{}".format(k, len(cur_list), cur_list))
             print("-----------")
 
-    def printEmptyClasses(self, K):
+    def getEmptyClasses(self, K):
         partition_byClass = self.toCrispPartitionByClass(K)
+        empty_classes = []
         for k in range(K):
             cur_list = partition_byClass[k]
             len(cur_list)
             if(len(cur_list) == 0):
-                print(" {}".format(k+1), end='', flush=True)
+                empty_classes.append(k)
+        return(empty_classes)
+
+    def printEmptyClasses(self, K):
+        for k in self.getEmptyClasses(K):
+            print(" {}".format(k), end='', flush=True)
 
     def _calc_best_medoids(self, D, U_membDegree, K, m):
         """Calculate the best medoids vector according to Eq. 4"""
