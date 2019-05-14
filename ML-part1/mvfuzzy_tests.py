@@ -12,7 +12,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 
 
 # CONSTANTS
-RANDOM_SEED = 128476
+RANDOM_SEED = 495924220
 
 
 def test_matrix_iterative(D: np.array, K, m, T, err):
@@ -20,17 +20,14 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
     Compares the performance of the iterative vs matrix implementations of the
     several equations to compute the fuzzy partition.
     """
-    n_elems = D.shape[0]
-    p_views = D.shape[2]
+    n_elems = D.shape[1]
+    p_views = D.shape[0]
     t = TicToc()
     mvf = MVFuzzy()
 
     # Initial medoids selection
-    rand_elements = random.sample_without_replacement(n_elems, K * p_views, random_state=RANDOM_SEED)
-    G_medoids = np.zeros(shape=[K, p_views], dtype=int)
-    for k in range(0, K):
-        for p in range(0, p_views):
-            G_medoids[k, p] = rand_elements[k*p_views + p]  # p cols, k lines
+    np.random.seed(RANDOM_SEED)
+    G_medoids = np.random.randint(n_elems, size=(K, p_views))
 
     # Initial weight vector
     W_weights = np.ones(shape=[K, p_views], dtype=float)
@@ -54,9 +51,10 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
     print_formatted("Matrix: ", elapsed)
 
     # check if matrices are identical
-    areEqual_U = np.isclose(U_membDegree_iterative, U_membDegree_matrix)
+    areEqual_U = U_membDegree_iterative == U_membDegree_matrix
     areEqual_U = areEqual_U.all()
-    print_formatted("Iterative == Matrix:", areEqual_U)
+    print_formatted("U | Iterative == Matrix:", areEqual_U)
+    print_formatted("Diff: ", str(np.sum(abs(U_membDegree_iterative - U_membDegree_matrix))))
 
     # ---------------------------------------------------------------------------
     # Adequacy calculation
@@ -72,15 +70,15 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
 
     # matrix (optimized)
     t.tic()
-    J_adequacy_matrix = mvf._calc_adequacy(
+    J_adequacy_matrix = mvf._calc_adequacy_np(
         D, G_medoids, W_weights, U_membDegree_matrix, K, m)
     elapsed = t.tocvalue()
     print_formatted("Matrix: ", elapsed)
 
     # check if results are identical
-    # must use math.isclose() to compare floats to deal with aproximation errors
-    areEqual_J = math.isclose(J_adequacy_iterative, J_adequacy_matrix)
-    print_formatted("Iterative == Matrix:", areEqual_J)
+    areEqual_J = J_adequacy_iterative == J_adequacy_matrix
+    print_formatted("J | Iterative == Matrix:", areEqual_J)
+    print_formatted("Diff: ", str(abs(J_adequacy_iterative - J_adequacy_matrix)))
 
     # ---------------------------------------------------------------------------
     # Best medoid vector calculation
@@ -102,7 +100,7 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
     # check if results are identical
     areEqual_G = G_bestMedoids_iterative == G_bestMedoids_matrix
     areEqual_G = areEqual_G.all()
-    print_formatted("Iterative == Matrix:", areEqual_G)
+    print_formatted("G | Iterative == Matrix:", areEqual_G)
 
     # ---------------------------------------------------------------------------
     # Best weights vector calculation
@@ -122,15 +120,38 @@ def test_matrix_iterative(D: np.array, K, m, T, err):
     print_formatted("Matrix:", elapsed)
 
     # check if results are identical
-    areEqual_W = np.isclose(W_bestWeights_iterative, W_bestWeights_matrix)
+    areEqual_W = W_bestWeights_iterative == W_bestWeights_matrix
     areEqual_W = areEqual_W.all()
-    print_formatted("Iterative == Matrix:", areEqual_W)
-    np.savetxt("W_iterative", W_bestWeights_iterative)
-    np.savetxt("W_matrix", W_bestWeights_matrix)
+    print_formatted("W | Iterative == Matrix:", areEqual_W)
+    print_formatted("Diff: ", str(np.sum(abs(W_bestWeights_iterative - W_bestWeights_matrix))))
+
+    # ---------------------------------------------------------------------------
+    # Membership with weights
+    # iterative
+    print("---------------------------------------------")
+    print("WEIGHTED Membership Vector (U | Eq. 6)")
+    t.tic()
+    U_membDegree_iterative = mvf_iterative.calc_membership_degree(
+        D, G_bestMedoids_matrix, W_bestWeights_iterative, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Iterative: ", elapsed)
+
+    # matrix (optimized)
+    t.tic()
+    U_membDegree_matrix = mvf._calc_membership_degree(
+        D, G_bestMedoids_matrix, W_bestWeights_matrix, K, m)
+    elapsed = t.tocvalue()
+    print_formatted("Matrix: ", elapsed)
+
+    # check if matrices are identical
+    areEqual_U = U_membDegree_iterative == U_membDegree_matrix
+    areEqual_U = areEqual_U.all()
+    print_formatted("Uw | Iterative == Matrix:", areEqual_U)
+    print_formatted("Diff: ", str(np.sum(abs(U_membDegree_iterative - U_membDegree_matrix))))
 
 
 # should be improved, maybe generalized and always require the suffix
-def print_formatted(name: str, value, suffix=True):
+def print_formatted(name: str, value, suffix=True, end='\n'):
     if(type(value) is float):
         if(suffix):
             suffix = " seconds"
@@ -139,7 +160,7 @@ def print_formatted(name: str, value, suffix=True):
         value_str = "{:.8f}{}".format(value, suffix)
     else:
         value_str = str(value)
-    print("{:25}{}".format(name, value_str))
+    print("{:25}{}".format(name, value_str), end=end)
 
 
 def test_fuzzy_partition(D: np.array, K, m, T, err):
@@ -175,20 +196,21 @@ def main():
         "mfeat/mfeat-kar", sep="\\s+", header=None, dtype=float)
 
     # normalize
-    scaler = preprocessing.MinMaxScaler()
+    scaler = preprocessing.StandardScaler()
     norm_fac = scaler.fit_transform(mfeat_fac)
     norm_fou = scaler.fit_transform(mfeat_fou)
     norm_kar = scaler.fit_transform(mfeat_kar)
 
     # compute dissimilarity matrices
-    D = np.zeros((2000, 2000, 3))
-    D[:, :, 0] = euclidean_distances(norm_fac)
-    D[:, :, 1] = euclidean_distances(norm_fou)
-    D[:, :, 2] = euclidean_distances(norm_kar)
+    D = np.zeros((3, 2000, 2000), dtype=float)
+    D[0, :, :] = euclidean_distances(norm_fac)
+    D[1, :, :] = euclidean_distances(norm_fou)
+    D[2, :, :] = euclidean_distances(norm_kar)
 
-    for i in range(0, 15):
-        # test_matrix_iterative(D, 10, 1.6, 150, 10**-10)
-        test_fuzzy_partition(D, 10, 1.6, 150, 10**-10)
+    for i in range(10):
+        test_matrix_iterative(D, 10, 1.6, 150, 10**-10)
+        # test_fuzzy_partition(D, 10, 1.6, 150, 10**-10)
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
 
 
 if __name__ == '__main__':
