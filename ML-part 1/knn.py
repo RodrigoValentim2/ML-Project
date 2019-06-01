@@ -6,7 +6,7 @@ import numpy as np
 
 class KNN:
     def __init__(self):
-        self.k = 3
+        self.k =  [3,3,3]
         self.X_trains = []
         self.y_trains = []
         self.evidence = 0
@@ -18,6 +18,7 @@ class KNN:
         self.X_trains = X_trains
         self.y_trains = y_trains
         self.k = k
+       
         __, counts = np.unique(self.y_trains[0], return_counts=True)
         self.priori = counts/len(self.y_trains[0])
         
@@ -26,17 +27,17 @@ class KNN:
         
         posteriori_view1  = []
         for x in (X_test[0]):
-            n = self.neighbors(x ,self.X_trains[0] ,self.y_trains[0], self.k)
+            n = self.neighbors(x ,self.X_trains[0] ,self.y_trains[0], self.k[0])
             posteriori_view1.append(self.calc_posteriori(n, X_test[0]))
                                  
         posteriori_view2  = []
         for x in (X_test[1]):
-            n = self.neighbors(x ,self.X_trains[1] ,self.y_trains[1], self.k)
+            n = self.neighbors(x ,self.X_trains[1] ,self.y_trains[1], self.k[1])
             posteriori_view2.append(self.calc_posteriori(n, X_test[1]))
          
         posteriori_view3  = []
         for x in (X_test[2]):
-            n = self.neighbors(x ,self.X_trains[2] ,self.y_trains[2], self.k)
+            n = self.neighbors(x ,self.X_trains[2] ,self.y_trains[2], self.k[2])
             posteriori_view3.append(self.calc_posteriori(n, X_test[2]))
         
      
@@ -78,7 +79,6 @@ class KNN:
         df = pd.DataFrame()
         df['y'] = y_neighbors
         df['distance'] =  distances
-        df = df.sort_values('distance').head(self.k)
+        df = df.sort_values('distance').head(k)
         x_neighbors = list(df['y'].values)
-        
         return x_neighbors
