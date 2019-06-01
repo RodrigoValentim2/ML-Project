@@ -59,7 +59,7 @@ class MVFuzzy:
         self.bestMedoidVectors = np.empty
         self.bestWeightVectors = np.empty
         self.bestMembershipVectors = np.empty
-        self.lastIteration = np.empty
+        self.lastIteration = 0
         self.lastAdequacy = 0.0
 
     def run(self, D: np.array, K, m, T, err):
@@ -91,7 +91,8 @@ class MVFuzzy:
             U_t = self._calc_membership_degree(D, G_t, W_t, K, m)
             J_t = self._calc_adequacy(D, G_t, W_t, U_t, K, m)
             J_adequacy_difference = abs(J_previous - J_t)
-            if J_adequacy_difference < err:
+            self.bestMembershipVectors = U_t
+            if J_adequacy_difference < err and not self.hasEmptyCluster(K):
                 break
             else:
                 U_previous = U_t

@@ -24,7 +24,9 @@ from sklearn import preprocessing
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.cluster import adjusted_rand_score
 
-RANDOM_SEED = 495924220
+# RANDOM_SEED = 495924220
+RANDOM_SEED = 572953998
+# RANDOM_SEED = 2
 PARAM_K = 10
 PARAM_m = 1.6
 PARAM_T = 150
@@ -76,7 +78,7 @@ best_iteration = 0
 np.random.seed(RANDOM_SEED)
 J_previous = float("Inf")
 t.tic()
-print("{:5}| {:15}  | {:15}  | {:5}".format("It", "J_t", "Best J_t", "Has Empty"))
+print("{:5}| {:15}  | {:15}  | {:5}  | {}".format("It", "J_t", "Best J_t", "Has Empty", "Last t"))
 for i in range(REPETITIONS):
     # print('\n---------------------')
     # print("Current iteration:", i)  # , end="\r", flush=True)
@@ -93,9 +95,10 @@ for i in range(REPETITIONS):
         has_empty_str = "True: {}".format(mvf.getEmptyClasses(PARAM_K))
     else:
         has_empty_str = ""
-    print("{:5}| {:<16.8f} | {Jbest} | {:5}"
-          .format(i+1, mvf.lastAdequacy, has_empty_str, Jbest=Jbest_print))
+    print("{:5}| {:<16.8f} | {Jbest} | {:10} | {}"
+          .format(i+1, mvf.lastAdequacy, has_empty_str, mvf.lastIteration, Jbest=Jbest_print),flush=True)
 t.toc("Fuzzy algorithm 100x: ")
+
 # %% [markdown]
 # ## 4. Resultados do Particionamento com MVFCMddV
 
